@@ -88,18 +88,35 @@ task createDist(type: CreateDistTask, dependsOn: proguard) {
     compType "fabric"
 }
 
+task sourcesJar(type: Jar, dependsOn: classes) {
+    from rootProject.sourceSets.main.allJava
+    from rootProject.sourceSets.api.allJava
+    archiveClassifier.set("sources")
+}
+
 build.finalizedBy(createDist)
 
 publishing {
     publications {
         mavenFabric(MavenPublication) {
-            artifactId = rootProject.archives_base_name + "-" + project.name
-            from components.java
+            artifactId = rootProject.archives_base_name + "-" + project.name            
+            artifact "../dist/baritone-api-fabric-" + version + ".jar"
+            artifact sourcesJar
         }
     }
 
     // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
     repositories {
-        // Add repositories to publish to here.
+        maven {
+            name = "ccbluex-maven"
+            url = "https://maven.ccbluex.net/releases"
+            credentials {
+                username = System.getenv("MAVEN_TOKEN_NAME")
+                password = System.getenv("MAVEN_TOKEN_SECRET")
+            }
+            authentication {
+                basic(BasicAuthentication)
+            }
+        }
     }
 }
